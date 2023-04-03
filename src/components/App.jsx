@@ -4,30 +4,37 @@ import css from './App.module.css';
 
 class App extends Component {
   state = {
-    contacts: [],
+    contacts: [
+      { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
+      { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
+      { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
+      { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
+    ],
+    filter: '',
     name: '',
+    number: '',
   };
 
-  addContact = data => {
-    data.id = nanoid();
+  addContact = contact => {
+    contact.id = nanoid();
     this.setState(prevState => ({
-      contacts: [data, ...prevState.contacts],
+      contacts: [contact, ...prevState.contacts],
     }));
     console.log(this.state);
   };
 
   resetForm = () => {
-    this.setState({ name: '' });
+    this.setState({ name: '', number: '' });
   };
 
   onSubmit = evt => {
     evt.preventDefault();
-    // console.log(evt);
-    //const { contacts } = this.state;
-    const data = { name: this.state.name };
-    this.addContact(data);
+    const newContact = {
+      name: this.state.name,
+      number: this.state.number,
+    };
+    this.addContact(newContact);
     this.resetForm();
-    // console.log(this.state);
   };
 
   handleInputChange = evt => {
@@ -35,10 +42,15 @@ class App extends Component {
     this.setState({
       [name]: value,
     });
-    // console.log(this.state);
   };
 
   render() {
+    const { filter, contacts } = this.state;
+
+    const cash = contacts.filter(contact => {
+      return contact.name.toLowerCase().includes(filter.toLowerCase());
+    });
+
     return (
       <div className={css.phonebookArea}>
         <h3 className={css.mainTitle}>Phonebook</h3>
@@ -56,25 +68,41 @@ class App extends Component {
               onChange={this.handleInputChange}
             />
           </label>
-          {/* <label className={css.contactLabel}>
+          <label className={css.contactLabel}>
             Number
             <input
               className={css.contactInput}
               type="tel"
               name="number"
+              value={this.state.number}
               pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
               title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
               required
+              onChange={this.handleInputChange}
             />
-          </label> */}
+          </label>
           <button className={css.addBtn} type="submit">
             Add contact
           </button>
         </form>
         <h3>Contacts</h3>
+        <label className={css.contactLabel}>
+          Find contacts by name
+          <input
+            className={css.contactInput}
+            type="text"
+            name="filter"
+            value={this.state.filter}
+            onChange={this.handleInputChange}
+          />
+        </label>
         <ul>
-          {this.state.contacts.map(elm => {
-            return <li key={elm.id}>{elm.name}</li>;
+          {cash.map(elm => {
+            return (
+              <li key={elm.id}>
+                {elm.name}: {elm.number}
+              </li>
+            );
           })}
         </ul>
       </div>
