@@ -1,6 +1,11 @@
 import { Component } from 'react';
 import { nanoid } from 'nanoid';
+import PropTypes from 'prop-types';
 import css from './App.module.css';
+import ContactForm from './ContactForm/ContactForm';
+import Filter from './Filter/Filter';
+import ContactList from './ContactList/ContactList';
+import ContactElement from './ContactElement/ContactElement';
 
 class App extends Component {
   state = {
@@ -11,33 +16,32 @@ class App extends Component {
       { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
     ],
     filter: '',
-    name: '',
-    number: '',
+  };
+
+  deleteContact = id => {
+    const { contacts } = this.state;
+    const foundIndex = contacts.findIndex(cont => cont.id === id);
+    contacts.splice(foundIndex, 1);
+    this.setState({ contacts: contacts });
   };
 
   addContact = contact => {
+    const { contacts } = this.state;
+    const foundContact = contacts.find(
+      cont => cont.name.toLowerCase() === contact.name.toLowerCase()
+    );
+    if (foundContact) {
+      alert(`${foundContact.name} is already in contacts.`);
+      return;
+    }
+
     contact.id = nanoid();
     this.setState(prevState => ({
       contacts: [contact, ...prevState.contacts],
     }));
-    console.log(this.state);
   };
 
-  resetForm = () => {
-    this.setState({ name: '', number: '' });
-  };
-
-  onSubmit = evt => {
-    evt.preventDefault();
-    const newContact = {
-      name: this.state.name,
-      number: this.state.number,
-    };
-    this.addContact(newContact);
-    this.resetForm();
-  };
-
-  handleInputChange = evt => {
+  handleFilterChange = evt => {
     const { name, value } = evt.currentTarget;
     this.setState({
       [name]: value,
@@ -46,68 +50,38 @@ class App extends Component {
 
   render() {
     const { filter, contacts } = this.state;
-
-    const cash = contacts.filter(contact => {
-      return contact.name.toLowerCase().includes(filter.toLowerCase());
+    const loFilter = filter.toLowerCase();
+    const contactsCash = contacts.filter(contact => {
+      return contact.name.toLowerCase().includes(loFilter);
     });
 
     return (
       <div className={css.phonebookArea}>
         <h3 className={css.mainTitle}>Phonebook</h3>
-        <form className={css.contactForm} onSubmit={this.onSubmit}>
-          <label className={css.contactLabel}>
-            Name
-            <input
-              className={css.contactInput}
-              type="text"
-              name="name"
-              value={this.state.name}
-              pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
-              title="Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
-              required
-              onChange={this.handleInputChange}
-            />
-          </label>
-          <label className={css.contactLabel}>
-            Number
-            <input
-              className={css.contactInput}
-              type="tel"
-              name="number"
-              value={this.state.number}
-              pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
-              title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
-              required
-              onChange={this.handleInputChange}
-            />
-          </label>
-          <button className={css.addBtn} type="submit">
-            Add contact
-          </button>
-        </form>
+        <ContactForm addContact={this.addContact} />
         <h3>Contacts</h3>
-        <label className={css.contactLabel}>
-          Find contacts by name
-          <input
-            className={css.contactInput}
-            type="text"
-            name="filter"
-            value={this.state.filter}
-            onChange={this.handleInputChange}
+        <Filter filter={filter} handleFilterChange={this.handleFilterChange} />
+        <ContactList>
+          <ContactElement
+            contactsCash={contactsCash}
+            deleteContact={this.deleteContact}
           />
-        </label>
-        <ul>
-          {cash.map(elm => {
-            return (
-              <li key={elm.id}>
-                {elm.name}: {elm.number}
-              </li>
-            );
-          })}
-        </ul>
+        </ContactList>
       </div>
     );
   }
 }
+
+App.propTypes = {
+  contact: PropTypes.objectOf(
+    PropTypes.exact({
+      name: PropTypes.string.isRequired,
+      contacts: PropTypes.objectOf({
+        name: PropTypes.string.isRequired,
+        number: PropTypes.string,
+      }),
+    })
+  ),
+};
 
 export default App;
